@@ -1,11 +1,19 @@
 from collections import deque
 from collections import defaultdict
+import unittest
+
+# ------------------------------- Tree Visualization -------------------------------
+def print_tree(root, level=0, prefix="Root: "):
+    if root is not None:
+        print(" " * (level * 4) + prefix + str(root.value))
+        if root.left or root.right:
+            print_tree(root.left, level + 1, "L--- ")
+            print_tree(root.right, level + 1, "R--- ")
 
 # ------------------------------- Class Definition -------------------------------
-
 class TreeNode:
     def __init__(self, value):
-        self.value = value
+        self.val = value
         self.left = None
         self.right = None
 
@@ -66,67 +74,80 @@ def search_bst(root, target):
         return search_bst(root.left, target)
     else:
         return search_bst(root.right, target)
-
-#2 TODO: Add tests
+    
 def invertTree(root):
     if not root:
         return root
     root.left, root.right = root.right,root.left
-    self.invertTree(root.left)
-    self.invertTree(root.right)
+    invertTree(root.left)
+    invertTree(root.right)
     return root
 
-#3 TODO: Add tests
-def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+def levelOrder(self, root):
     dct = defaultdict(list)
-    if not root:
-        return []
-    def traversal(node,level):
-        if not node:
-            return
-        dct[level].append(node.val)
-        traversal(node.left,level+1)
-        traversal(node.right,level+1)
-    traversal(root,0)
+    queue = deque()
+    
+    queue.append((root,0))
+
+    while(queue):
+        temp, level = queue.pop()
+        if not temp:
+            continue
+        l,r = temp.left, temp.right
+        dct[level].append(temp.val)
+        if temp.left:
+            queue.appendleft((temp.left,level+1))
+        if temp.right:
+            queue.appendleft((temp.right,level+1))
+                
     return list(dct.values())
 
 
 # ------------------------------- Solutions -------------------------------
 
-# # Traversal examples:
-# if __name__ == "__main__":
-#     root = TreeNode(1)
-#     root.left = TreeNode(2)
-#     root.right = TreeNode(3)
-#     root.left.left = TreeNode(4)
-#     root.left.right = TreeNode(5)
-#     root.right.left = TreeNode(6)
-#     root.right.right = TreeNode(7)
-    
-#     print("Pre-order Traversal:")
-#     preorder(root)
-#     print("\nIn-order Traversal:")
-#     inorder(root)
-#     print("\nPost-order Traversal:")
-#     postorder(root)
-#     print("\nIterative DFS Traversal:")
-#     iterative_dfs(root)
-#     print("\nBFS Traversal:")
-#     bfs(root)
+class TestBinaryTreeFunctions(unittest.TestCase):
+    def setUp(self):
+        # Creating the following BST:
+        #        4
+        #       / \
+        #      2   7
+        #     / \  / \
+        #    1  3 6  9
+        self.root = TreeNode(4)
+        self.root.left = TreeNode(2)
+        self.root.right = TreeNode(7)
+        self.root.left.left = TreeNode(1)
+        self.root.left.right = TreeNode(3)
+        self.root.right.left = TreeNode(6)
+        self.root.right.right = TreeNode(9)
 
+    # Test cases for search_bst
+    def test_search_bst_found(self):
+        self.assertTrue(search_bst(self.root, 6))  # Value 6 exists
 
+    def test_search_bst_not_found(self):
+        self.assertFalse(search_bst(self.root, 10))  # Value 10 does not exist
 
-# # => Excercise #1
-# root = TreeNode(8)
-# root.left = TreeNode(3)
-# root.right = TreeNode(10)
-# root.left.left = TreeNode(1)
-# root.left.right = TreeNode(6)
-# root.left.right.left = TreeNode(4)
-# root.left.right.right = TreeNode(7)
-# root.right.right = TreeNode(14)
-# root.right.right.left = TreeNode(13)
+    # Test cases for invertTree
+    def test_invert_tree(self):
+        inverted_root = invertTree(self.root)
+        self.assertEqual(inverted_root.left.val, 7)  # Root's left should now be 7
+        self.assertEqual(inverted_root.right.val, 2)  # Root's right should now be 2
 
-# print(search_bst(root, 6))  # True
-# print(search_bst(root, 2))  # False
+    def test_invert_tree_single_node(self):
+        single_node = TreeNode(5)
+        inverted_single = invertTree(single_node)
+        self.assertEqual(inverted_single.val, 5)
+        self.assertIsNone(inverted_single.left)
+        self.assertIsNone(inverted_single.right)
 
+    # Test cases for levelOrder
+    def test_level_order(self):
+        result = levelOrder(self, self.root)
+        self.assertEqual(result, [[4], [2, 7], [1, 3, 6, 9]])
+
+    def test_level_order_empty_tree(self):
+        self.assertEqual(levelOrder(self,None), [])  # Empty tree should return an empty list
+
+if __name__ == '__main__':
+    unittest.main()
